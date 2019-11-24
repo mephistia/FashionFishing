@@ -12,6 +12,8 @@ public class UIInventario : MonoBehaviour {
 
     void Awake()
     {
+
+        // para quantidade de slots:
         for (int i = 0; i < slotQtd; i++)
         {
             GameObject novo = Instantiate(slotPrefab); // cria um novo slot
@@ -21,10 +23,13 @@ public class UIInventario : MonoBehaviour {
     }
 
     // atualiza o slot do índice na lista, colocando o ícone do item
-    void UpdateSlot(int slot, Item item)
+    public void UpdateSlot(int slot, Item item)
     {
         itensNaUI[slot].UpdateIcon(item);
+
     }
+
+
 
 
     public void AddItemUI(Item item)

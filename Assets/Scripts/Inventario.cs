@@ -12,7 +12,7 @@ public class Inventario : MonoBehaviour {
 
     // inventário da UI
     public UIInventario inventarioUI;
-	
+
 
     void Awake()
     {
@@ -25,17 +25,33 @@ public class Inventario : MonoBehaviour {
     public void AddItem(int id)
     {
         Item newItem = database.getItem(id); // busca o item
+
+        // se ja existe o item no inventario
+        if (inventario.Contains(database.getItem(id)))
+        {
+            database.getItem(id).qtd++;
+        }
+        else
+           inventarioUI.AddItemUI(newItem); // adiciona o item na interface se não existir ainda
+
         inventario.Add(newItem); // adiciona o item
-        inventarioUI.AddItemUI(newItem); // adiciona o item na interface
+
 
     }
 
-    // adicoina um item pelo nome
+    // adiciona um item pelo nome
     public void AddItem(string name)
     {
         Item newItem = database.getItem(name);
-        inventario.Add(newItem);
-        inventarioUI.AddItemUI(newItem); // adiciona o item na interface
+        // se ja existe o item no inventario
+        if (inventario.Contains(database.getItem(name)))
+        {
+            database.getItem(name).qtd++;
+        }
+        else
+            inventarioUI.AddItemUI(newItem); // adiciona o item na interface se não existir ainda
+
+        inventario.Add(newItem); // adiciona o item
     }
 
     // pegar um item do inventário por id
@@ -112,5 +128,7 @@ public class Inventario : MonoBehaviour {
             inventario.Find(item => item.name == name).equipped = true;
         }
     }
+
+
 
 }

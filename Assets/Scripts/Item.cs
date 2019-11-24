@@ -4,19 +4,12 @@ using UnityEngine;
 
 public class Item {
 
-    public int id;
-    public string name;
-    public string desc;
-    public bool isEquip; // para iscas
-    public bool canSell;
+    public int id, fama, raridade;
+    public int? qtd = 1; // valor anulável
+    public string name, desc;
+    public bool isEquip, equipped = false, canSell; // para iscas
     public Sprite icon;
-
-    public float priceBuy;
-    public float priceSell;
-    public int fama; // requerida para comprar iscas, ganha ao vender peixes
-    public int raridade; // 0 = comum, 1 = incomum etc
-
-    public bool equipped = false; // nenhum começa como equipado
+    public float priceBuy, priceSell;
 
     public Item(int id, string name, string desc, bool isEquip, bool canSell, float priceBuy, float priceSell, int fama, int raridade) // sem Sprite icon porque é definido conforme o nome
     {
@@ -30,6 +23,11 @@ public class Item {
         this.priceSell = priceSell;
         this.fama = fama;
         this.raridade = raridade;
+
+        if (name == "Isca_Comum" || id == 0)
+        {
+            qtd = null;
+        }
 
     }
 
@@ -47,6 +45,8 @@ public class Item {
         this.priceSell = item.priceSell;
         this.fama = item.fama;
         this.raridade = item.raridade;
+        this.qtd = item.qtd;
+        this.equipped = item.equipped;
 
     }
 }

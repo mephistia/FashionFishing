@@ -8,24 +8,23 @@ using UnityEngine.SceneManagement;
 
 public class Manager : MonoBehaviour {
 
-    GameObject botoes, PanelInventario, PanelLoja, BarraFundo, BarraFill, AreaPescar, PanelSucesso;
+    public GameObject botoes, PanelInventario, PanelLoja, BarraFundo, BarraFill, AreaPescar, PanelSucesso, PanelFracasso;
     bool podeLancar;
     bool timer;
     float myTimer;
     bool lancou;
     float numgerado;
-    bool podefisgar;
-    bool podepuxar;
+    public bool podefisgar, podepuxar, podepuxarArduino;
     Text feedback;
     float vel;
     float tamAtual;
     bool up;
-
     public enum estados { PERTO, PERFEITO, LONGE}; // 0, 1, 2
     estados estadolinha;
 
-	// Use this for initialization
-	void Start () {
+    void Start () {
+
+        PanelFracasso = GameObject.Find("PanelFracasso");
         BarraFundo = GameObject.Find("BarraFundo");
         BarraFill = GameObject.Find("BarraFill");
         AreaPescar = GameObject.Find("AreaPescar");
@@ -38,6 +37,7 @@ public class Manager : MonoBehaviour {
         numgerado = 0f;
         podefisgar = false;
         podepuxar = false;
+        podepuxarArduino = false;
         feedback = GameObject.Find("TextoUI").GetComponent<Text>();
         PanelInventario = GameObject.Find("PanelInventario");
 
@@ -45,14 +45,17 @@ public class Manager : MonoBehaviour {
 
         BarraFundo.SetActive(false);
         PanelSucesso.SetActive(false);
+        PanelFracasso.SetActive(false);
 
 
 
-        vel = 1.8f;
+        vel = 0.5f;
         
 
         tamAtual = 0;
         up = true;
+
+        feedback.text = " ";
 
     }
 
@@ -62,7 +65,6 @@ public class Manager : MonoBehaviour {
         if (lancou)
         {
             Debug.Log("Lançou!");
-            feedback.text += " - Linha lançada!";
             // quando chegar a um segundo
             if (myTimer >= 1.0f)
             {
@@ -96,6 +98,9 @@ public class Manager : MonoBehaviour {
 
 		if (podeLancar)
         {
+            // se pressionar o botão, ativa uma flag
+            // depois que ativar a flag, se mexeu para frente lança e verifica a distância
+
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 myTimer = 0f;
@@ -117,28 +122,36 @@ public class Manager : MonoBehaviour {
                 podeLancar = false;
 
                 // passar pra próxima função
-                lancoulinha(estadolinha);
+                lancoulinha(estadolinha); // vai para "mexer()"
 
             }
         }
 
         if (podefisgar)
         {
-            if (Input.GetKeyDown(KeyCode.Space)){
-                podepuxar = true;
-            }
+            // feedback do peixe mexendo...
+
+            // se fez o movimento com o Arduino, podepuxar é true
+
+            podepuxar = true;
+            podefisgar = false;
+            
         }
 
         if (podepuxar)
         {
             // mostrar a barra
+
             BarraFundo.SetActive(true);
+
+            feedback.text = "Pressione o botão quando a barra estiver na área indicada!";
 
 
             if (up)
             { 
                 //sobe
                 tamAtual += Time.deltaTime / vel;
+
                 BarraFill.GetComponent<Image>().fillAmount = tamAtual;
 
                 if (BarraFill.GetComponent<Image>().fillAmount > 0.99f)
@@ -162,48 +175,80 @@ public class Manager : MonoBehaviour {
             }
 
 
+            // se apertar o botão no arduino
             if (Input.GetKeyDown(KeyCode.Space))
             {
+
+                
                // verificar se está na área correta
                if (BarraFill.GetComponent<Image>().fillAmount > 0.46 && BarraFill.GetComponent<Image>().fillAmount < 0.62)
                 {
-                    // mostrar tela de sucesso
-                    podeLancar = false;
+                    // aguardar puxar a vara de volta
+                    puxarLinhaFisgado();
                     BarraFundo.SetActive(false);
+                    podepuxar = false;
+
                 }
-               else
+                else
                 {
                     // mostrar tela de fracasso
-                    podeLancar = false;
                     BarraFundo.SetActive(false);
+                    PanelFracasso.SetActive(true);
+                    botoes.SetActive(true);
+                    feedback.text = "";
+                    BarraFill.GetComponent<Image>().fillAmount = 0;
+                    podepuxar = false;
+
 
                 }
 
             }
         }
-	}
+
+        if (podepuxarArduino) // quando puder puxar
+        {
+            // verifica se puxou no acelerometro e mostra tela de sucesso
+            PanelSucesso.SetActive(true);
+            botoes.SetActive(true);
+            feedback.text = "";
+            BarraFill.GetComponent<Image>().fillAmount = 0;
+            podepuxarArduino = false;
+
+
+        }
+    }
+
+    public void puxarLinhaFisgado()
+    {
+        feedback.text = "Puxe a vara para pescar o peixe";
+        podepuxarArduino = true;
+        
+    }
 
     public void hideBotoes()
     {
         botoes.SetActive(false);
+        feedback.text = "Mantenha a vara para trás e aperte o botão";
         podeLancar = true;
     }
 
     public void lancoulinha(estados estado)
     {
      
-        if (estado == estados.LONGE || estado == estados.PERTO)
+        if (estado == estados.LONGE)
         {
             // peixes normais
-            Debug.Log("Peixes normais...");
-            feedback.text = "Área de peixes normais...";
+            feedback.text = "Lançamento muito longe!";
 
+        }
+        else if (estado == estados.PERTO)
+        {
+            // peixes bons
+            feedback.text = "Lançamento muito perto!";
         }
         else
         {
-            // peixes bons
-            Debug.Log("Peixes bons!");
-            feedback.text = "Área de peixes bons...";
+            feedback.text = "Lançamento perfeito!";
         }
 
         // aleatório para fisgar ou não:
@@ -230,11 +275,9 @@ public class Manager : MonoBehaviour {
 
     void mexer()
     {
-        Debug.Log("Peixe mexendo!!");
-        feedback.text = "O peixe está se mexendo!";
+        feedback.text = "O peixe está se mexendo! Aperte o botão para fisgá-lo!";
         podefisgar = true;
 
-        // feedback do peixe mexendo...
     }
 
 
@@ -247,6 +290,11 @@ public class Manager : MonoBehaviour {
     public void AbrirLoja()
     {
         PanelLoja.SetActive(!PanelInventario.activeInHierarchy);
+    }
+
+    public void ToggleOpen()
+    {
+        gameObject.SetActive(!gameObject.activeInHierarchy);
     }
 
 

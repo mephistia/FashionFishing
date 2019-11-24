@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SeguirMouse : MonoBehaviour {
 
-	void Update()
+	void LateUpdate()
     {
 
         // o item no espaço de item selecionado fica junto do mouse

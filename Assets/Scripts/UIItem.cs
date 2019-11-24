@@ -4,15 +4,22 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class UIItem : MonoBehaviour, IPointerClickHandler{
+// classe do SLOT
+
+public class UIItem : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler
+{
 
     public Item item;
     private Image imagem;
-    private UIItem itemSelect;
+    private Text text;
+    //private UIItem itemSelect;
     private Inventario inventario;
-    bool isMouseOverEmpty = false;
-    bool isMouseOverItem = false;
-    Item itemOver;
+    private UIInventario uiInventario;
+    public Canvas canvas;
+    private GraphicRaycaster rc;
+    public UIItem itemSelect, slotAtual;
+
+    private Tooltip tooltip;
 
 
     void Awake()
@@ -24,8 +31,20 @@ public class UIItem : MonoBehaviour, IPointerClickHandler{
         // inventário
         inventario = GameObject.Find("Player").GetComponent<Inventario>();
 
-        // o Item selecionado:
+        // inventário ui
+        uiInventario = GameObject.Find("PanelInventario").GetComponent<UIInventario>();
+
+        // texto
+        text = gameObject.GetComponentInChildren<Text>();
+
+        // canvas
+        canvas = GameObject.Find("Canvas").GetComponent<Canvas>();
+
+        rc = canvas.GetComponent<GraphicRaycaster>();
+
         itemSelect = GameObject.Find("ItemSelect").GetComponent<UIItem>();
+
+        tooltip = GameObject.Find("Tooltip").GetComponent<Tooltip>();
     }
 
     void Start()
@@ -35,7 +54,7 @@ public class UIItem : MonoBehaviour, IPointerClickHandler{
     }
 
 
-    // atualizar o ícone do item por fora
+    // atualizar o ícone do item
     public void UpdateIcon(Item item)
     {
         this.item = item;
@@ -46,11 +65,20 @@ public class UIItem : MonoBehaviour, IPointerClickHandler{
             imagem.color = Color.white;
             imagem.sprite = this.item.icon; // pega o ícone que está em item e passa para a imagem
 
+            if (item.qtd != null)
+                text.text = item.qtd.ToString(); // muda a quantidade
+            else
+                text.text = "∞";
+
 
             // se for equipado:
             if (this.item.equipped)
             {
-                transform.parent.GetComponent<Image>().color = new Color(255,255,255, 0.7f);
+                transform.parent.GetComponent<Image>().color = new Color(255,255,255, 0.7f); // slot transparente
+            }
+            else
+            {
+                transform.parent.GetComponent<Image>().color = new Color(255, 255, 255, 1);
             }
         }
 
@@ -58,103 +86,99 @@ public class UIItem : MonoBehaviour, IPointerClickHandler{
         {
             // esconde
             imagem.color = Color.clear;
+            text.text = "";
+            transform.parent.GetComponent<Image>().color = new Color(255, 255, 255, 1);
         }
+
+        //inventario.UpdateUI();
+
     }
 
 
-    // quando clicar, equipar
-    public void EquipItem(Item item)
+    public void OnPointerDown(PointerEventData eventData)
     {
-        // o item do slot recebe o valor do parametro
-        this.item = item;
-
-        // se o slot não estiver vazio
+        // se clicou em um slot com item
         if (this.item != null)
         {
-            this.item.equipped = true;
-            UpdateIcon(item);
+            // se clicou com botão esquerdo e item não está equipado
+            if (eventData.button == PointerEventData.InputButton.Left && !this.item.equipped)
+            {
+                itemSelect.UpdateIcon(this.item); // o item arrastado copia este item
+                UpdateIcon(null); // este item fica vazio
+            }
+
+
         }
+ 
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    public void OnPointerUp(PointerEventData eventData)
     {
-        Debug.Log("Clicou em um item");
-        // se clicar em um espaço com item equipável
-        if (this.item != null && this.item.isEquip)
+        if (eventData.button == PointerEventData.InputButton.Left && itemSelect.item != null)
         {
-            Debug.Log("É um item equipável");
+            List<RaycastResult> results = new List<RaycastResult>();
+            rc.Raycast(eventData, results);
 
-            // se a lista no inventário contém um item que está equipado
-            if (inventario.GetItemEquipped() != null)
+            foreach (var hit in results)
             {
-                // desequipar o item
-                inventario.GetItemEquipped().equipped = false;
-                // equipar o item clicado
-                this.item.equipped = true;
-                Debug.Log("Trocou o item que já estava equipado");
+
+                UIItem slot = hit.gameObject.GetComponent<UIItem>();
+
+                if (slot)
+                {
+                    if (slot.item == null) // se estiver vazio
+                    {
+                        // larga no slot
+                        slot.UpdateIcon(itemSelect.item);
+                        itemSelect.UpdateIcon(null);
+                    }
+
+                    // se estiver ocupado, substitui
+                    else
+                    {
+                        UpdateIcon(slot.item); // o anterior recebe o item de onde foi largado
+                        slot.UpdateIcon(itemSelect.item); // esse recebe o item que estava selecionado
+
+                    }
+                }
+
+                break;
 
             }
-            // se não contém nenhum item equipado ainda
-            else
-            {
-                this.item.equipped = true;
-                Debug.Log("Equipou o item");
-
-            }
-
-            // no fim atualizar
-            UpdateIcon(this.item);
         }
-        else
-        Debug.Log("Espaço vazio!!");
+
+        // se clicou com o direito e é item equípável
+        else if (eventData.button == PointerEventData.InputButton.Right && this.item.isEquip)
+        {
+            inventario.GetItemEquipped().equipped = false;
+            // equipar o item clicado
+            this.item.equipped = true;
+
+            // atualiza todos os icones
+            foreach (UIItem item in uiInventario.itensNaUI)
+            {
+                item.UpdateIcon(item.item);
+            }
+            tooltip.text.text = "";
+            tooltip.UpdateText(this.item);
+        }
+
 
     }
 
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (this.item != null)
+        {
+            tooltip.UpdateText(this.item);
+        }
+    }
 
-
-    //public void OnPointerClick(PointerEventData eventData)
-    //{
-    //    // se clicar nesse espaço e existir item (UI)
-    //    if (this.item != null)
-    //    {
-    //        Debug.Log("Entrou em esse item não está vazio");
-    //        // e se já tiver um item selecionado
-    //        if (itemSelect.item != null)
-    //        {
-    //            Debug.Log("Entrou em item do itemselect não está vazio");
-
-    //            // cria um clone do item clicado
-    //            Item clone = new Item(itemSelect.item);
-    //            Debug.Log("Criou clone");
-
-    //            // atualiza os ícones
-    //            itemSelect.UpdateIcon(this.item);
-    //            UpdateIcon(clone);
-    //            Debug.Log("Atualizou clone");
-    //        }
-
-    //        // mas se não houver um item selecionado
-    //        else
-    //        {
-    //            // atualiza o ícone do item selecionado
-    //            itemSelect.UpdateIcon(this.item);
-
-    //            // e deixa o ícone atual vazio
-    //            UpdateIcon(null);
-    //            Debug.Log("Atualizou item selecionado agora");
-
-    //        }
-    //    }
-
-    //    // mas se clicou em espaço vazio e existe um item sendo selecionado
-    //    else if (itemSelect.item != null)
-    //    {
-    //        // atualiza o ícone do que está selecionado para ser esse
-    //        UpdateIcon(itemSelect.item);
-    //        itemSelect.UpdateIcon(null); // deixa o "selecionado" sem nada
-    //        Debug.Log("substituiu icone");
-
-    //    }
-    //}
-
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        tooltip.text.text = "";
+        tooltip.gameObject.SetActive(false);
+    }
 }
+
+  
