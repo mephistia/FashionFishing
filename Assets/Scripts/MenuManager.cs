@@ -15,10 +15,7 @@ public class MenuManager : MonoBehaviour {
         PanelCreditos.SetActive(false);
 	}
 	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+
 
     public void AbreCreditos()
     {

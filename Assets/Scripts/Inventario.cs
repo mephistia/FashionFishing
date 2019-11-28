@@ -13,8 +13,11 @@ public class Inventario : MonoBehaviour {
     // inventário da UI
     public UIInventario inventarioUI;
 
+    // moedas
+    public Moedas moedasEFama;
 
-    void Awake()
+
+    void Start()
     {
         // adicionar a isca comum como padrão e equipar
         AddItem("Isca_Comum");
@@ -68,7 +71,7 @@ public class Inventario : MonoBehaviour {
 
     public Item GetItemEquipped()
     {
-        return inventario.Find(item => item.equipped);
+        return inventario.Find(item => item.equipped == true);
     }
     // remover o item do inventário(ou vender) por id
     public void RemoveItem(int id)
