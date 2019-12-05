@@ -8,24 +8,18 @@ using System.Linq;
 public class Interface : MonoBehaviour {
 
     SerialPort sp;
+
     public int dado;
 
 
     void Start () {
 
         // inicialização do Serial:
-            // trocar a string da porta!!
-        sp = new SerialPort("COM7", 9600/*, Parity.None, 8, StopBits.One*/);
-        //sp.DtrEnable = false;
+        sp = new SerialPort("COM7", 9600);
         sp.ReadTimeout = 1;
-        //sp.WriteTimeout = 1;
 
+        // abrir a porta
         sp.Open();
-
-        //if (sp.IsOpen)
-        //    sp.Write("Hello World");
-        //else
-        //    Debug.LogError("Serial port: " + sp.PortName + " está indisponível");
 
     }
 
@@ -34,7 +28,7 @@ public class Interface : MonoBehaviour {
 
         try  // evitar dados incompletos
         {
-            int dados = sp.ReadByte();
+            int dados = sp.ReadByte(); // ler o número enviado
             if (dados != 0)
             {
                 Debug.Log("ARDUINO ->  " + dados);

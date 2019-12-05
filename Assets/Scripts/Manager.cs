@@ -71,16 +71,12 @@ public class Manager : MonoBehaviour {
 
 }
 
-// Update is called once per frame
 void Update () {
 
         // atualiza o dado
         dado = arduino.dado;
 
-        // teste com teclado
-        if (Input.GetKeyDown(KeyCode.Z)){
-            dado = 2;
-        }
+     
 
         if (lancou)
         {
@@ -123,11 +119,7 @@ void Update () {
 
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                //myTimer = 0f;
-                //timer = true;
-                //Debug.Log("Pressionado em: " + Time.deltaTime * 60f);
-                //feedback.text = "Lançando...";
-
+              
 
                 apertouEspaco = true; // deixa disponível para lançar
 
@@ -159,22 +151,7 @@ void Update () {
 
 
 
-            //if (Input.GetKeyUp(KeyCode.Space))
-            //{
-            //    timer = false;
-            //    Debug.Log("Tempo agora: " + Time.deltaTime * 60f);
-            //    Debug.Log("Tempo do timer: " + myTimer);
-
-            //    if (myTimer > 1.3f) { estadolinha = estados.LONGE; }
-            //    else if (myTimer > 0.3f) { estadolinha = estados.PERFEITO; }
-            //    else { estadolinha = estados.PERTO; }
-
-            //    podeLancar = false;
-
-            //    // passar pra próxima função
-            //    lancoulinha(estadolinha); // vai para "mexer()"
-
-            //}
+           
 
 
         }
