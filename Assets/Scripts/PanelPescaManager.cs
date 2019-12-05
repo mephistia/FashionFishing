@@ -25,6 +25,8 @@ public class PanelPescaManager : MonoBehaviour {
         atualizaSucesso();
         atualizaFracasso();
         Debug.Log("Painel atualizado");
+        BotaoVender.GetComponent<Button>().interactable = true;
+
     }
 
     public void atualizaSucesso()
@@ -86,7 +88,10 @@ public class PanelPescaManager : MonoBehaviour {
         BotaoVender.GetComponent<Button>().interactable = false;
 
         inventario.moedasEFama.addMoedas(itemObtido.priceSell);
-        
+        inventario.moedasEFama.addFama(itemObtido.fama);
+
+        //teste: adiciona peixe
+        inventario.AddItem("Isca_Rosa");
     }
 
 }
